@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
+import '../models/monthly_summary.dart';
 
 class BudgetProgress extends StatelessWidget {
-  const BudgetProgress({super.key});
+  final MonthlySummary? summary;
+
+  const BudgetProgress({super.key, required this.summary});
 
   @override
   Widget build(BuildContext context) {
-    const double progress = 0.64;
+    const double budget = 50000;
+    final double spent = summary?.expense ?? 0;
+    final double progress = (spent / budget).clamp(0.0, 1.0);
+    final double remaining = budget - spent;
+    final int percent = (progress * 100).round();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -90,8 +97,8 @@ class BudgetProgress extends StatelessWidget {
                       color: const Color(0xff6C63FF),
                       borderRadius: BorderRadius.circular(30),
                     ),
-                    child: const Text(
-                      "64%",
+                    child: Text(
+                      "$percent%",
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -120,22 +127,22 @@ class BudgetProgress extends StatelessWidget {
 
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
+                children: [
 
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
 
-                      Text(
+                      const Text(
                         "Spent",
                         style: TextStyle(color: Colors.grey),
                       ),
 
-                      SizedBox(height: 5),
+                      const SizedBox(height: 5),
 
                       Text(
-                        "₹32,150",
-                        style: TextStyle(
+                        "₹${spent.toStringAsFixed(0)}",
+                        style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 20,
                         ),
@@ -147,16 +154,16 @@ class BudgetProgress extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
 
-                      Text(
+                      const Text(
                         "Remaining",
                         style: TextStyle(color: Colors.grey),
                       ),
 
-                      SizedBox(height: 5),
+                      const SizedBox(height: 5),
 
                       Text(
-                        "₹17,850",
-                        style: TextStyle(
+                        "₹${remaining.toStringAsFixed(0)}",
+                        style: const TextStyle(
                           color: Colors.green,
                           fontWeight: FontWeight.bold,
                           fontSize: 20,

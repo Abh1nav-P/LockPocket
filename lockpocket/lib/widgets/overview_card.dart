@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
+import '../models/monthly_summary.dart';
 
 class OverviewCard extends StatelessWidget {
-  const OverviewCard({super.key});
+  final MonthlySummary? summary;
+
+  const OverviewCard({
+    super.key,
+    required this.summary,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -31,12 +37,12 @@ class OverviewCard extends StatelessWidget {
           Row(
             children: [
 
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
 
-                    Text(
+                    const Text(
                       "Monthly Overview",
                       style: TextStyle(
                         color: Colors.white70,
@@ -44,20 +50,20 @@ class OverviewCard extends StatelessWidget {
                       ),
                     ),
 
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
 
                     Text(
-                      "₹27,850",
-                      style: TextStyle(
+                      "₹${summary?.balance.toStringAsFixed(2) ?? "0.00"}",
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 38,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
 
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
 
-                    Text(
+                    const Text(
                       "Remaining Balance",
                       style: TextStyle(
                         color: Colors.white70,
@@ -97,7 +103,7 @@ class OverviewCard extends StatelessWidget {
                 _item(
                   Icons.account_balance_wallet,
                   "Salary",
-                  "₹45,000",
+                  "₹${(summary?.salary ?? 0).toStringAsFixed(2)}",
                 ),
 
                 const Divider(color: Colors.white24),
@@ -105,7 +111,7 @@ class OverviewCard extends StatelessWidget {
                 _item(
                   Icons.payments_rounded,
                   "Other Income",
-                  "₹15,000",
+                  "₹${(summary?.income ?? 0).toStringAsFixed(2)}",
                 ),
 
                 const Divider(color: Colors.white24),
@@ -113,7 +119,7 @@ class OverviewCard extends StatelessWidget {
                 _item(
                   Icons.receipt_long_rounded,
                   "Expenses",
-                  "₹32,150",
+                  "₹${(summary?.expense ?? 0).toStringAsFixed(2)}"
                 ),
               ],
             ),

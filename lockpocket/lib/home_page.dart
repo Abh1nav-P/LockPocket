@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+
+import 'models/monthly_summary.dart';
+import 'services/transaction_service.dart';
 
 import 'widgets/header.dart';
 import 'widgets/month_selector.dart';
@@ -9,8 +13,35 @@ import 'widgets/transaction_list.dart';
 import 'widgets/bottom_navigation.dart';
 import 'widgets/add_options_sheet.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  final TransactionService transactionService = TransactionService();
+
+  MonthlySummary? summary;
+
+  @override
+  void initState() {
+    super.initState();
+    loadSummary();
+  }
+
+  Future<void> loadSummary() async {
+    final currentMonth =
+        DateFormat("MMMM yyyy").format(DateTime.now());
+
+    final data =
+        await transactionService.getMonthlySummary(currentMonth);
+
+    setState(() {
+      summary = data;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,55 +52,59 @@ class HomePage extends StatelessWidget {
 
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color(0xff6C63FF),
-        onPressed: () {
-            showModalBottomSheet(
+        onPressed: () async {
+          await showModalBottomSheet(
             context: context,
             backgroundColor: Colors.white,
             shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.vertical(
+              borderRadius: BorderRadius.vertical(
                 top: Radius.circular(30),
-                ),
+              ),
             ),
-            builder: (context) {
-                return const AddOptionsSheet();
-            },
-            );
+            builder: (_) => AddOptionsSheet(onSaved: loadSummary),
+          );
+
+          // Refresh dashboard after closing bottom sheet
+          loadSummary();
         },
         child: const Icon(
-            Icons.add,
-            color: Colors.white,
+          Icons.add,
+          color: Colors.white,
         ),
-        ),
+      ),
 
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(20),
-          children: const [
+          children: [
 
-            Header(),
+            const Header(),
 
-            SizedBox(height:20),
+            const SizedBox(height: 20),
 
-            MonthSelector(),
+            const MonthSelector(),
 
-            SizedBox(height:20),
+            const SizedBox(height: 20),
 
-            OverviewCard(),
+            OverviewCard(
+              summary: summary,
+            ),
 
-            SizedBox(height:25),
+            const SizedBox(height: 25),
 
-            QuickActions(),
+            const QuickActions(),
 
-            SizedBox(height:25),
+            const SizedBox(height: 25),
 
-            BudgetProgress(),
+            BudgetProgress(
+              summary: summary,
+            ),
 
-            SizedBox(height:25),
+            const SizedBox(height: 25),
 
-            TransactionList(),
+            const TransactionList(),
 
-            SizedBox(height:100),
-
+            const SizedBox(height: 100),
           ],
         ),
       ),

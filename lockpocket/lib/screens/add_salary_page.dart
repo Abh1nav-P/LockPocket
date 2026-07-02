@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:month_year_picker/month_year_picker.dart';
 
-import '../database/database_helper.dart';
 import '../models/transaction_model.dart';
+import '../services/transaction_service.dart';
 
 class AddSalaryPage extends StatefulWidget {
   const AddSalaryPage({super.key});
@@ -13,10 +13,43 @@ class AddSalaryPage extends StatefulWidget {
 }
 
 class _AddSalaryPageState extends State<AddSalaryPage> {
+  final TransactionService transactionService = TransactionService();
+
   final TextEditingController amountController = TextEditingController();
   final TextEditingController notesController = TextEditingController();
 
   DateTime selectedMonth = DateTime.now();
+  bool isUpdate = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkExistingSalary();
+  }
+
+  Future<void> _checkExistingSalary() async {
+    final month = DateFormat("MMMM yyyy").format(selectedMonth);
+    final transactions = await transactionService.getMonthlyTransactions(month);
+    final existing = transactions.where((t) => t.type == 'salary').toList();
+
+    if (existing.isNotEmpty) {
+      setState(() {
+        isUpdate = true;
+        final val = existing.first.amount.toStringAsFixed(0);
+        amountController.value = TextEditingValue(
+          text: val,
+          selection: TextSelection.collapsed(offset: val.length),
+        );
+        notesController.text = existing.first.notes ?? '';
+      });
+    } else {
+      setState(() {
+        isUpdate = false;
+        amountController.clear();
+        notesController.clear();
+      });
+    }
+  }
 
   Future<void> pickMonth() async {
     final DateTime? picked = await showMonthYearPicker(
@@ -30,6 +63,7 @@ class _AddSalaryPageState extends State<AddSalaryPage> {
       setState(() {
         selectedMonth = picked;
       });
+      await _checkExistingSalary();
     }
   }
 
@@ -46,20 +80,20 @@ class _AddSalaryPageState extends State<AddSalaryPage> {
 
     final transaction = TransactionModel(
       type: "salary",
-      amount: double.parse(amountController.text),
+      amount: double.parse(amountController.text.trim().replaceAll(',', '')),
       category: "Salary",
       month: DateFormat("MMMM yyyy").format(selectedMonth),
       date: DateFormat("yyyy-MM-dd").format(DateTime.now()),
       notes: notesController.text.trim(),
     );
 
-    await DatabaseHelper.instance.insertTransaction(transaction);
+    await transactionService.saveSalary(transaction);
 
     if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Salary Saved Successfully"),
+      SnackBar(
+        content: Text(isUpdate ? "Salary Updated Successfully" : "Salary Saved Successfully"),
         backgroundColor: Colors.green,
       ),
     );
@@ -78,24 +112,21 @@ class _AddSalaryPageState extends State<AddSalaryPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xffF7F8FC),
-
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        title: const Text(
-          "Add Salary",
-          style: TextStyle(
+        title: Text(
+          isUpdate ? "Update Salary" : "Add Salary",
+          style: const TextStyle(
             color: Colors.black,
             fontWeight: FontWeight.bold,
           ),
         ),
       ),
-
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-
           const Text(
             "Salary Amount",
             style: TextStyle(
@@ -157,7 +188,6 @@ class _AddSalaryPageState extends State<AddSalaryPage> {
               ),
               child: Row(
                 children: [
-
                   Container(
                     height: 45,
                     width: 45,
@@ -219,6 +249,7 @@ class _AddSalaryPageState extends State<AddSalaryPage> {
 
           SizedBox(
             height: 58,
+            width: double.infinity,
             child: ElevatedButton(
               onPressed: saveSalary,
               style: ElevatedButton.styleFrom(
@@ -228,9 +259,9 @@ class _AddSalaryPageState extends State<AddSalaryPage> {
                   borderRadius: BorderRadius.circular(18),
                 ),
               ),
-              child: const Text(
-                "Save Salary",
-                style: TextStyle(
+              child: Text(
+                isUpdate ? "Update Salary" : "Save Salary",
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 18,
                 ),

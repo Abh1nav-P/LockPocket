@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../screens/add_salary_page.dart';
+import '../screens/add_income_page.dart';
+import '../screens/add_expense_page.dart';
 
 class AddOptionsSheet extends StatelessWidget {
-  const AddOptionsSheet({super.key});
+  final VoidCallback onSaved;
+
+  const AddOptionsSheet({super.key, required this.onSaved});
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +51,7 @@ class AddOptionsSheet extends StatelessWidget {
                 MaterialPageRoute(
                   builder: (_) => const AddSalaryPage(),
                 ),
-              );
+              ).then((_) => onSaved());
             },
           ),
 
@@ -58,7 +62,15 @@ class AddOptionsSheet extends StatelessWidget {
             subtitle: "Other income",
             icon: Icons.payments,
             color: Colors.blue,
-            onTap: () {},
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const AddIncomePage(),
+                ),
+              ).then((_) => onSaved());
+            },
           ),
 
           const SizedBox(height: 15),
@@ -68,7 +80,15 @@ class AddOptionsSheet extends StatelessWidget {
             subtitle: "Track spending",
             icon: Icons.receipt_long,
             color: Colors.red,
-            onTap: () {},
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const AddExpensePage(),
+                ),
+              ).then((_) => onSaved());
+            },
           ),
 
           const SizedBox(height: 17),
