@@ -4,10 +4,7 @@ import '../models/monthly_summary.dart';
 class OverviewCard extends StatelessWidget {
   final MonthlySummary? summary;
 
-  const OverviewCard({
-    super.key,
-    required this.summary,
-  });
+  const OverviewCard({super.key, required this.summary});
 
   @override
   Widget build(BuildContext context) {
@@ -18,10 +15,7 @@ class OverviewCard extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xff6C63FF),
-            Color(0xff8A7DFF),
-          ],
+          colors: [Color(0xff6C63FF), Color(0xff8A7DFF)],
         ),
         boxShadow: [
           BoxShadow(
@@ -33,25 +27,17 @@ class OverviewCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-
           Row(
             children: [
-
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-
                     const Text(
                       "Monthly Overview",
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 16,
-                      ),
+                      style: TextStyle(color: Colors.white70, fontSize: 16),
                     ),
-
                     const SizedBox(height: 8),
-
                     Text(
                       "₹${summary?.balance.toStringAsFixed(2) ?? "0.00"}",
                       style: const TextStyle(
@@ -60,19 +46,14 @@ class OverviewCard extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-
                     const SizedBox(height: 4),
-
                     const Text(
                       "Remaining Balance",
-                      style: TextStyle(
-                        color: Colors.white70,
-                      ),
+                      style: TextStyle(color: Colors.white70),
                     ),
                   ],
                 ),
               ),
-
               Container(
                 height: 90,
                 width: 90,
@@ -88,9 +69,7 @@ class OverviewCard extends StatelessWidget {
               ),
             ],
           ),
-
           const SizedBox(height: 25),
-
           Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
@@ -99,28 +78,14 @@ class OverviewCard extends StatelessWidget {
             ),
             child: Column(
               children: [
-
-                _item(
-                  Icons.account_balance_wallet,
-                  "Salary",
-                  "₹${(summary?.salary ?? 0).toStringAsFixed(2)}",
-                ),
-
+                _item(Icons.account_balance_wallet, "Salary",
+                    "₹${(summary?.salary ?? 0).toStringAsFixed(2)}"),
                 const Divider(color: Colors.white24),
-
-                _item(
-                  Icons.payments_rounded,
-                  "Other Income",
-                  "₹${(summary?.income ?? 0).toStringAsFixed(2)}",
-                ),
-
+                _item(Icons.payments_rounded, "Other Income",
+                    "₹${(summary?.income ?? 0).toStringAsFixed(2)}"),
                 const Divider(color: Colors.white24),
-
-                _item(
-                  Icons.receipt_long_rounded,
-                  "Expenses",
-                  "₹${(summary?.expense ?? 0).toStringAsFixed(2)}"
-                ),
+                _item(Icons.receipt_long_rounded, "Expenses",
+                    "₹${(summary?.expense ?? 0).toStringAsFixed(2)}"),
               ],
             ),
           ),
@@ -129,40 +94,21 @@ class OverviewCard extends StatelessWidget {
     );
   }
 
-  Widget _item(
-    IconData icon,
-    String title,
-    String amount,
-  ) {
+  Widget _item(IconData icon, String title, String amount) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-
-          Icon(
-            icon,
-            color: Colors.white,
-          ),
-
+          Icon(icon, color: Colors.white, size: 20),
           const SizedBox(width: 12),
-
           Expanded(
-            child: Text(
-              title,
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 16,
-              ),
-            ),
+            child: Text(title,
+                style: const TextStyle(color: Colors.white70, fontSize: 15)),
           ),
-
           Text(
             amount,
             style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-            ),
+                color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
           ),
         ],
       ),

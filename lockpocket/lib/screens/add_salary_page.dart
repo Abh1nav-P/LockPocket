@@ -6,7 +6,12 @@ import '../models/transaction_model.dart';
 import '../services/transaction_service.dart';
 
 class AddSalaryPage extends StatefulWidget {
-  const AddSalaryPage({super.key});
+  final TransactionModel? transaction;
+
+  const AddSalaryPage({
+    super.key,
+    this.transaction,
+  });
 
   @override
   State<AddSalaryPage> createState() => _AddSalaryPageState();
@@ -24,7 +29,22 @@ class _AddSalaryPageState extends State<AddSalaryPage> {
   @override
   void initState() {
     super.initState();
-    _checkExistingSalary();
+
+    if (widget.transaction != null) {
+      isUpdate = true;
+
+      amountController.text =
+          widget.transaction!.amount.toStringAsFixed(0);
+
+      notesController.text =
+          widget.transaction!.notes;
+
+      selectedMonth =
+          DateFormat("MMMM yyyy")
+              .parse(widget.transaction!.month);
+    } else {
+      _checkExistingSalary();
+    }
   }
 
   Future<void> _checkExistingSalary() async {
@@ -68,10 +88,14 @@ class _AddSalaryPageState extends State<AddSalaryPage> {
   }
 
   Future<void> saveSalary() async {
-    if (amountController.text.trim().isEmpty) {
+    final amount = double.tryParse(
+      amountController.text.trim().replaceAll(',', ''),
+    );
+
+    if (amount == null || amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Please enter salary amount"),
+          content: Text("Please enter a valid salary amount"),
           backgroundColor: Colors.red,
         ),
       );
@@ -79,26 +103,37 @@ class _AddSalaryPageState extends State<AddSalaryPage> {
     }
 
     final transaction = TransactionModel(
+      id: widget.transaction?.id,
       type: "salary",
-      amount: double.parse(amountController.text.trim().replaceAll(',', '')),
+      amount: amount,
       category: "Salary",
       month: DateFormat("MMMM yyyy").format(selectedMonth),
-      date: DateFormat("yyyy-MM-dd").format(DateTime.now()),
+      date: DateFormat("yyyy-MM-dd").format(selectedMonth),
       notes: notesController.text.trim(),
     );
 
-    await transactionService.saveSalary(transaction);
+    if (widget.transaction == null) {
+      await transactionService.saveSalary(transaction);
+    } else {
+      await transactionService.updateTransaction(transaction);
+    }
 
     if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(isUpdate ? "Salary Updated Successfully" : "Salary Saved Successfully"),
+        content: Text(
+          widget.transaction != null
+              ? "Salary Updated Successfully"
+              : (isUpdate
+                  ? "Salary Updated Successfully"
+                  : "Salary Saved Successfully"),
+        ),
         backgroundColor: Colors.green,
       ),
     );
 
-    Navigator.pop(context);
+    Navigator.pop(context, true);
   }
 
   @override
@@ -116,8 +151,12 @@ class _AddSalaryPageState extends State<AddSalaryPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: Text(
-          isUpdate ? "Update Salary" : "Add Salary",
+          widget.transaction == null ? "Add Salary" : "Edit Salary",
           style: const TextStyle(
             color: Colors.black,
             fontWeight: FontWeight.bold,
@@ -168,7 +207,7 @@ class _AddSalaryPageState extends State<AddSalaryPage> {
           const SizedBox(height: 10),
 
           InkWell(
-            onTap: pickMonth,
+            onTap: widget.transaction == null ? pickMonth : null,
             borderRadius: BorderRadius.circular(18),
             child: Container(
               padding: const EdgeInsets.symmetric(
@@ -213,7 +252,12 @@ class _AddSalaryPageState extends State<AddSalaryPage> {
                     ),
                   ),
 
-                  const Icon(Icons.keyboard_arrow_down),
+                  widget.transaction == null
+                  ? const Icon(Icons.keyboard_arrow_down)
+                  : const Icon(
+                      Icons.lock,
+                      color: Colors.grey,
+                    ),
                 ],
               ),
             ),
@@ -260,7 +304,9 @@ class _AddSalaryPageState extends State<AddSalaryPage> {
                 ),
               ),
               child: Text(
-                isUpdate ? "Update Salary" : "Save Salary",
+                widget.transaction != null
+                    ? "Update Salary"
+                    : (isUpdate ? "Update Salary" : "Save Salary"),
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 18,

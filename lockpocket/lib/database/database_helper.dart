@@ -3,9 +3,10 @@ import 'package:sqflite/sqflite.dart';
 
 import '../models/transaction_model.dart';
 import '../models/monthly_summary.dart';
+import '../models/budget_model.dart';
 
 class DatabaseHelper {
-  DatabaseHelper._();
+  DatabaseHelper._(); 
 
   static final DatabaseHelper instance = DatabaseHelper._();
 
@@ -27,15 +28,13 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 6,
       onCreate: _createDatabase,
+      onUpgrade: _onUpgrade,
     );
   }
 
-  Future<void> _createDatabase(
-    Database db,
-    int version,
-  ) async {
+  Future<void> _createDatabase(Database db, int version) async {
     await db.execute('''
       CREATE TABLE transactions(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -47,6 +46,40 @@ class DatabaseHelper {
         notes TEXT
       )
     ''');
+    await db.execute('''
+      CREATE TABLE budgets(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        reason TEXT NOT NULL,
+        amount REAL NOT NULL,
+        month TEXT NOT NULL,
+        notes TEXT,
+        is_completed INTEGER NOT NULL DEFAULT 0,
+        actual_spent REAL,
+        transaction_id INTEGER
+      )
+    ''');
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 3) {
+      await db.execute('''
+        CREATE TABLE budgets(
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          reason TEXT NOT NULL,
+          amount REAL NOT NULL,
+          month TEXT NOT NULL,
+          notes TEXT,
+          is_completed INTEGER NOT NULL DEFAULT 0,
+          actual_spent REAL,
+          transaction_id INTEGER
+        )
+      ''');
+    }
+    if (oldVersion < 6) {
+      try {
+        await db.execute('ALTER TABLE budgets ADD COLUMN transaction_id INTEGER');
+      } catch (_) {}
+    }
   }
 
   // ==========================
@@ -115,14 +148,10 @@ class DatabaseHelper {
 
     final result = await db.query(
       'transactions',
-      orderBy: 'date DESC',
+      orderBy: 'date DESC, id DESC',
     );
 
-    return result
-        .map(
-          (e) => TransactionModel.fromMap(e),
-        )
-        .toList();
+    return result.map((e) => TransactionModel.fromMap(e)).toList();
   }
 
   // ==========================
@@ -168,7 +197,7 @@ class DatabaseHelper {
       'transactions',
       where: 'month = ?',
       whereArgs: [month],
-      orderBy: 'date DESC',
+      orderBy: 'date DESC, id DESC',
     );
 
     return result
@@ -184,48 +213,106 @@ class DatabaseHelper {
 
   Future<void> clearDatabase() async {
     final db = await database;
-
     await db.delete('transactions');
   }
 
-  Future<MonthlySummary> getMonthlySummary(String month) async {
+  // ==========================
+  // BUDGET CRUD
+  // ==========================
+
+  Future<int> insertBudget(BudgetModel budget) async {
+    final db = await database;
+    return await db.insert(
+      'budgets',
+      {
+        'reason': budget.reason,
+        'amount': budget.amount,
+        'month': budget.month,
+        'notes': budget.notes,
+        'is_completed': budget.isCompleted ? 1 : 0,
+        'actual_spent': budget.actualSpent,
+        'transaction_id': budget.transactionId,
+      },
+    );
+  }
+
+  Future<List<BudgetModel>> getBudgetsByMonth(String month) async {
   final db = await database;
 
   final result = await db.query(
-    'transactions',
+    'budgets',
     where: 'month = ?',
     whereArgs: [month],
+    orderBy: 'id DESC',
   );
 
-  double salary = 0;
-  double income = 0;
-  double expense = 0;
+  return result
+      .map((e) => BudgetModel.fromMap(e))
+      .toList();
+}
 
-  for (final row in result) {
-    final type = row['type'] as String;
-    final amount = (row['amount'] as num).toDouble();
-
-    switch (type) {
-      case 'salary':
-        salary += amount;
-        break;
-
-      case 'income':
-        income += amount;
-        break;
-
-      case 'expense':
-        expense += amount;
-        break;
-    }
+  Future<int> updateBudget(BudgetModel budget) async {
+    final db = await database;
+    return await db.update(
+      'budgets',
+      {
+        'reason': budget.reason,
+        'amount': budget.amount,
+        'month': budget.month,
+        'notes': budget.notes,
+        'is_completed': budget.isCompleted ? 1 : 0,
+        'actual_spent': budget.actualSpent,
+        'transaction_id': budget.transactionId,
+      },
+      where: 'id = ?',
+      whereArgs: [budget.id],
+    );
   }
 
-  return MonthlySummary(
-    salary: salary,
-    income: income,
-    expense: expense,
-    balance: (salary + income) - expense,
-  );
-}
+  Future<int> deleteBudget(int id) async {
+    final db = await database;
+    return await db.delete('budgets', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<MonthlySummary> getMonthlySummary(String month) async {
+    final db = await database;
+
+    final result = await db.query(
+      'transactions',
+      where: 'month = ?',
+      whereArgs: [month],
+    );
+
+    double salary = 0;
+    double income = 0;
+    double expense = 0;
+
+    for (final row in result) {
+      final type = row['type'] as String;
+      final amount = (row['amount'] as num).toDouble();
+      switch (type) {
+        case 'salary': salary += amount; break;
+        case 'income': income += amount; break;
+        case 'expense': expense += amount; break;
+      }
+    }
+
+    final budgetResult = await db.query(
+      'budgets',
+      where: 'month = ?',
+      whereArgs: [month],
+    );
+    final plannedBudget = budgetResult.fold<double>(
+      0, (sum, row) => sum + (row['amount'] as num).toDouble(),
+    );
+
+    return MonthlySummary(
+      salary: salary,
+      income: income,
+      expense: expense,
+      balance: (salary + income) - expense,
+      plannedBudget: plannedBudget,
+    );
+  }
 
 }

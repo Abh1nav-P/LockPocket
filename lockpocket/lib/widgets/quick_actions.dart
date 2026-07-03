@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
 
+import '../screens/add_salary_page.dart';
+import '../screens/add_income_page.dart';
+import '../screens/add_expense_page.dart';
+
 class QuickActions extends StatelessWidget {
-  const QuickActions({super.key});
+  final VoidCallback onSaved;
+  final VoidCallback onBudget;
+
+  const QuickActions({super.key, required this.onSaved, required this.onBudget});
 
   @override
   Widget build(BuildContext context) {
@@ -26,38 +33,42 @@ class QuickActions extends StatelessWidget {
           crossAxisSpacing: 16,
           mainAxisSpacing: 16,
           childAspectRatio: 1.18,
-          children: const [
+          children: [
 
             ActionCard(
               title: "Add Salary",
               subtitle: "Monthly salary",
-              color: Color(0xffDCFCE7),
-              iconColor: Color(0xff16A34A),
+              color: const Color(0xffDCFCE7),
+              iconColor: const Color(0xff16A34A),
               icon: Icons.account_balance_wallet_rounded,
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AddSalaryPage())).then((_) => onSaved()),
             ),
 
             ActionCard(
               title: "Add Income",
               subtitle: "Extra income",
-              color: Color(0xffDBEAFE),
-              iconColor: Color(0xff2563EB),
+              color: const Color(0xffDBEAFE),
+              iconColor: const Color(0xff2563EB),
               icon: Icons.payments_rounded,
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AddIncomePage())).then((_) => onSaved()),
             ),
 
             ActionCard(
               title: "Add Expense",
               subtitle: "Track spending",
-              color: Color(0xffFEE2E2),
-              iconColor: Color(0xffDC2626),
+              color: const Color(0xffFEE2E2),
+              iconColor: const Color(0xffDC2626),
               icon: Icons.receipt_long_rounded,
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AddExpensePage())).then((_) => onSaved()),
             ),
 
             ActionCard(
               title: "Set Budget",
               subtitle: "Monthly budget",
-              color: Color(0xffEDE9FE),
-              iconColor: Color(0xff6C63FF),
+              color: const Color(0xffEDE9FE),
+              iconColor: const Color(0xff6C63FF),
               icon: Icons.savings_rounded,
+              onTap: onBudget,
             ),
           ],
         ),
@@ -73,6 +84,7 @@ class ActionCard extends StatelessWidget {
   final Color color;
   final Color iconColor;
   final IconData icon;
+  final VoidCallback onTap;
 
   const ActionCard({
     super.key,
@@ -81,13 +93,14 @@ class ActionCard extends StatelessWidget {
     required this.color,
     required this.iconColor,
     required this.icon,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       borderRadius: BorderRadius.circular(26),
-      onTap: () {},
+      onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(

@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
-class BottomNavigation extends StatefulWidget {
-  const BottomNavigation({super.key});
+class BottomNavigation extends StatelessWidget {
+  final int currentIndex;
+  final ValueChanged<int> onTabChanged;
 
-  @override
-  State<BottomNavigation> createState() => _BottomNavigationState();
-}
-
-class _BottomNavigationState extends State<BottomNavigation> {
-  int selectedIndex = 0;
+  const BottomNavigation({
+    super.key,
+    required this.currentIndex,
+    required this.onTabChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -30,26 +30,10 @@ class _BottomNavigationState extends State<BottomNavigation> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            navItem(
-              icon: Icons.home_rounded,
-              label: "Home",
-              index: 0,
-            ),
-            navItem(
-              icon: Icons.receipt_long_rounded,
-              label: "History",
-              index: 1,
-            ),
-            navItem(
-              icon: Icons.bar_chart_rounded,
-              label: "Reports",
-              index: 2,
-            ),
-            navItem(
-              icon: Icons.settings_rounded,
-              label: "Settings",
-              index: 3,
-            ),
+            navItem(icon: Icons.home_rounded, label: "Home", index: 0),
+            navItem(icon: Icons.receipt_long_rounded, label: "History", index: 1),
+            navItem(icon: Icons.bar_chart_rounded, label: "Reports", index: 2),
+            navItem(icon: Icons.settings_rounded, label: "Settings", index: 3),
           ],
         ),
       ),
@@ -61,15 +45,11 @@ class _BottomNavigationState extends State<BottomNavigation> {
     required String label,
     required int index,
   }) {
-    final bool selected = selectedIndex == index;
+    final bool selected = currentIndex == index;
 
     return InkWell(
       borderRadius: BorderRadius.circular(20),
-      onTap: () {
-        setState(() {
-          selectedIndex = index;
-        });
-      },
+      onTap: () => onTabChanged(index),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
         padding: const EdgeInsets.symmetric(
